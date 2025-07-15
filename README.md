@@ -8,33 +8,33 @@ A comprehensive educational repository exploring **Large Language Models (LLMs)*
 
 This repository contains practical demonstrations and implementations of modern AI technologies:
 
-### **LLM Demonstrations** (`llms.ipynb`)
-- **Azure OpenAI Integration**: Complete setup guide for Azure OpenAI services
-- **Chat Conversations**: Build an AI study buddy for computer science topics
-- **Image Generation**: Create visual aids using DALL-E
-- **Educational Applications**: Real-world examples for students
-- **Essay Writing Assistant**: Help with academic writing and outlines
+### LLM Demos (`llms.ipynb`)
+- Azure OpenAI Integration: Complete setup guide for Azure OpenAI services
+- Chat Conversations: Build an AI study buddy for computer science topics
+- Image Generation: Create visual aids using DALL-E
+- Educational Applications: Real-world examples for students
+- Essay Writing Assistant: Help with academic writing and outlines
 
-### **RAG Implementation** (`rag.ipynb`)
-- **Document Processing**: Extract text from PDF files (Constitution of Kenya 2010)
-- **Text Chunking**: Intelligent document segmentation
-- **Vector Embeddings**: Using Sentence Transformers for semantic search
-- **FAISS Integration**: Efficient similarity search
-- **Query System**: Ask questions about constitutional content
+### RAG Implementation (`rag.ipynb`)
+- Document Processing: Extract text from PDF files (Constitution of Kenya 2010)
+- Text Chunking: Intelligent document segmentation
+- Vector Embeddings: Using Sentence Transformers for semantic search
+- FAISS Integration: Efficient similarity search
+- Query System: Ask questions about constitutional content
 
-### **Spotify MCP Server** (`spotify-play-music/`)
+### Spotify MCP Server (`spotify-play-music/`)
 A complete Model Context Protocol (MCP) server for Spotify integration:
-- **Music Control**: Play, pause, skip tracks, and adjust volume
-- **Apple Script Integration**: Native macOS Spotify control
-- **MCP Tools**: Structured tool definitions for AI agents
-- **Debug Support**: Built-in debugging with MCP Inspector
-- **Agent Builder Integration**: Connect with AI Toolkit Agent Builder
+- Music Control: Play, pause, skip tracks, and adjust volume
+- Apple Script Integration: Native macOS Spotify control
+- MCP Tools: Structured tool definitions for AI agents
+- Debug Support: Built-in debugging with MCP Inspector
+- Agent Builder Integration: Connect with AI Toolkit Agent Builder
 
 ## Getting Started
 
 ### Prerequisites
 - Python 3.8+
-- Azure OpenAI subscription (for LLM demos)
+- Azure OpenAI subscription (for LLM demos) or GitHub Models
 - Spotify application (for MCP server)
 - macOS (for Spotify MCP server)
 
@@ -101,17 +101,8 @@ relevant_chunks = query_constitution(question, k=3)
 - `get_current_track()`: Get currently playing track info
 - `set_volume(level)`: Adjust volume (0-100)
 
-## 🛠️ Features
 
-- ✅ **Production-ready code** with error handling
-- ✅ **Educational focus** with clear explanations
-- ✅ **Practical examples** for real-world applications
-- ✅ **Multiple AI technologies** in one repository
-- ✅ **Cross-platform support** (Windows, macOS, Linux)
-- ✅ **Documentation** and setup guides
-- ✅ **Debugging tools** and testing frameworks
-
-## Educational Resources
+## Resources
 
 - [GenAI for Beginners](https://github.com/microsoft/generative-ai-for-beginners) - Microsoft's comprehensive guide to Generative AI
 - [AI Agents for Beginners](https://github.com/microsoft/ai-agents-for-beginners?WT.mc_id=academic-105485-koreyst) - Learn about AI agents and autonomous systems
