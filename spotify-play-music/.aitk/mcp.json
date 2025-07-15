@@ -1,0 +1,8 @@
+{
+    "servers": {
+        "local-server-spotify_play_music": {
+            "type": "sse",
+            "url": "http://localhost:3001/sse"
+        }
+    }
+}
