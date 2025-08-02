@@ -1,0 +1,40 @@
+{
+  "system_info": {
+    "total_chunks": 31,
+    "embedding_model": "all-MiniLM-L6-v2",
+    "total_evaluations": 1
+  },
+  "performance_metrics": {
+    "avg_groundedness": 4.0,
+    "std_groundedness": 0.0,
+    "avg_relevance": 3.0,
+    "std_relevance": 0.0,
+    "avg_coherence": 4.0,
+    "std_coherence": 0.0,
+    "avg_fluency": 4.0,
+    "std_fluency": 0.0,
+    "avg_response_length": 629.0,
+    "avg_context_length": 35139.0,
+    "avg_retrieval_score": 0.6499853730201721
+  },
+  "evaluation_history": [
+    {
+      "timestamp": "2025-08-02T04:58:07",
+      "query": "What are the key objectives of the National AI Strategy?",
+      "response_length": 629,
+      "context_length": 35139,
+      "num_retrieved_chunks": 5,
+      "scores": {
+        "groundedness": 4.0,
+        "groundedness_reason": "N/A",
+        "relevance": 3.0,
+        "relevance_reason": "N/A",
+        "coherence": 4.0,
+        "coherence_reason": "N/A",
+        "fluency": 4.0,
+        "fluency_reason": "N/A"
+      },
+      "retrieval_score": 0.6499853730201721
+    }
+  ]
+}
