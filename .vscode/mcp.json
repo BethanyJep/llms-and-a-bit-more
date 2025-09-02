@@ -1,0 +1,21 @@
+{
+	"servers": {
+		"spotify-local": {
+		   "command": "python3",
+           "args": [
+               "server.py"
+           ],
+           "type": "stdio",
+           "cwd": "/Users/pikachu/Downloads/llms-and-a-bit-more/spotify-play-music/src/"
+		},
+		"add two numbers": {
+		   "command": "python3",
+           "args": [
+               "server.py"
+           ],
+           "type": "stdio",
+           "cwd": "/Users/pikachu/Downloads/llms-and-a-bit-more/mcp-bootcamp/"
+		}
+	},
+	"inputs": []
+}

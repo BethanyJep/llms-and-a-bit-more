@@ -34,7 +34,7 @@ async def run():
 
             # Call a tool
             print("CALL TOOL")
-            result = await session.call_tool("add", arguments={"a": 21, "b": 45})
+            result = await session.call_tool("add", arguments={"a": 432, "b": 32})
             print(result.content)
 
 

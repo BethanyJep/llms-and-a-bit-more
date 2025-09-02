@@ -104,3 +104,6 @@ async def set_volume(volume: int) -> str:
     status = "success" if result["success"] else "error"
     msg = f"Volume set to {volume}%" if result["success"] else f"Failed to set volume: {result['error']}"
     return json.dumps({"status": status, "message": msg})
+
+if __name__ == "__main__":
+    server.run()
