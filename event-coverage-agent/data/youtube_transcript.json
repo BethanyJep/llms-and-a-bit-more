@@ -1,0 +1,26 @@
+{
+  "event_name": "YouTube Video jNMme-todUI",
+  "event_date": "2025-10-21T20:06:52.818684",
+  "video_metadata": {
+    "youtube_id": "jNMme-todUI",
+    "url": "https://www.youtube.com/watch?v=jNMme-todUI&list=PLlrxD0HtieHiiekMS3no8-ZlZGf5Thfmk",
+    "author": "Unknown",
+    "views": 0,
+    "description": ""
+  },
+  "duration_seconds": 84,
+  "duration_formatted": "01:24",
+  "total_segments": 1,
+  "total_words": 221,
+  "segments": [
+    {
+      "timestamp": "00:02",
+      "speaker": "Speaker",
+      "text": "Should people build threat models? >> Of course. Yes. Uh but you can rely on what Microsoft builds as well and use it. >> Should people build threat models? I'll go with sure. Yes, people should build threat models. >> Of course. >> That sounds good. >> Yes. >> Yes, they should. Are you going to follow up with do you? Because no. >> Yes. People should not build threat models. Security people should build threat models. >> Yes. >> Yes. I would typically I I think they should have an idea of what a threat model is. Uh but they should work with security professional to help them validate their assumption error. >> Oh yeah. Yes. Absolutely. >> Yes. >> So people build threat models. >> Should you? Yeah. Or you hire a team that's really good at it because you probably aren't. >> Oh yeah. Yeah. Yeah. Yeah. Yes. Yeah, I think they should. I think they should because you want to be able to predict things. You want to do some red teaming. So, I think you need to be able to do that. Yes. >> Yes. Yes. Yes. Yes. >> Yes. >> Yes. >> Yes. >> Sure. Yes. All the time. >> Should people build threat models? >> People and AI should build threat models. >> Perfect.",
+      "start_seconds": 2.8,
+      "end_seconds": 84.52,
+      "word_count": 221
+    }
+  ],
+  "processed_at": "2025-10-21T20:06:52.818703"
+}

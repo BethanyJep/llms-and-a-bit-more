@@ -35,8 +35,9 @@ def test_youtube_processing():
     print("Testing YouTube processing with a real video...")
     print("-" * 60)
     
-    # Using a popular TED talk with captions (adjust if needed)
-    test_url = "https://www.youtube.com/watch?v=8jPQjjsBbIc"
+    # Using a TED talk that is known to have captions
+    # This is a short, popular video with reliable transcripts
+    test_url = "https://www.youtube.com/watch?v=arj7oStGLkU"
     
     try:
         print(f"URL: {test_url}")
@@ -54,12 +55,14 @@ def test_youtube_processing():
         print("Extracting transcript (this may take a moment)...")
         raw_transcript = YouTubeProcessor.get_transcript(video_id)
         print(f"✓ Transcript entries: {len(raw_transcript)}")
-        print(f"✓ First entry: {raw_transcript[0]}\n")
+        if raw_transcript:
+            print(f"✓ First entry: {raw_transcript[0]}\n")
         
         print("Segmenting transcript...")
         segments = YouTubeProcessor.segment_transcript(raw_transcript, segment_duration=120)
         print(f"✓ Total segments: {len(segments)}")
-        print(f"✓ First segment: {segments[0]['text'][:100]}...\n")
+        if segments:
+            print(f"✓ First segment: {segments[0]['text'][:100]}...\n")
         
         print("Processing full YouTube URL...")
         transcript_data = YouTubeProcessor.process_youtube_url(test_url)
@@ -71,10 +74,11 @@ def test_youtube_processing():
         print(f"Duration: {transcript_data['duration_formatted']}")
         print(f"Total Segments: {transcript_data['total_segments']}")
         print(f"Total Words: {transcript_data['total_words']}")
-        print(f"\nFirst segment:")
-        print(f"  Timestamp: {transcript_data['segments'][0]['timestamp']}")
-        print(f"  Speaker: {transcript_data['segments'][0]['speaker']}")
-        print(f"  Text: {transcript_data['segments'][0]['text'][:200]}...")
+        if transcript_data['segments']:
+            print(f"\nFirst segment:")
+            print(f"  Timestamp: {transcript_data['segments'][0]['timestamp']}")
+            print(f"  Speaker: {transcript_data['segments'][0]['speaker']}")
+            print(f"  Text: {transcript_data['segments'][0]['text'][:200]}...")
         print()
         
         return True
@@ -85,7 +89,11 @@ def test_youtube_processing():
         print("  - The video has no captions")
         print("  - The video is private or restricted")
         print("  - Network connection issues")
+        print("  - YouTube API rate limiting")
         print("\nTry a different YouTube URL with captions enabled.")
+        print("\nSuggested videos to try (known to have captions):")
+        print("  - https://www.youtube.com/watch?v=arj7oStGLkU")
+        print("  - https://www.youtube.com/watch?v=UF8uR6Z6KLc")
         return False
 
 

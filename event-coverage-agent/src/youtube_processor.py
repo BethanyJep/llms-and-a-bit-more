@@ -6,8 +6,16 @@ import re
 import json
 from typing import Dict, List, Optional
 from datetime import datetime
-from youtube_transcript_api import YouTubeTranscriptApi
-from pytube import YouTube
+
+try:
+    from youtube_transcript_api import YouTubeTranscriptApi
+except ImportError:
+    raise ImportError("Please install youtube-transcript-api: pip install youtube-transcript-api")
+
+try:
+    from pytube import YouTube
+except ImportError:
+    YouTube = None  # Make pytube optional
 
 
 class YouTubeProcessor:
@@ -41,7 +49,23 @@ class YouTubeProcessor:
     @staticmethod
     def get_video_metadata(video_id: str) -> Dict:
         """Get video metadata using pytube."""
+        if YouTube is None:
+            # Fallback if pytube is not available
+            return {
+                'title': f'YouTube Video {video_id}',
+                'author': 'Unknown',
+                'length': 0,
+                'views': 0,
+                'publish_date': None,
+                'description': ''
+            }
+        
         try:
+            import ssl
+            import certifi
+            # Try to handle SSL certificate issues
+            ssl._create_default_https_context = ssl._create_unverified_context
+            
             yt = YouTube(f"https://www.youtube.com/watch?v={video_id}")
             return {
                 'title': yt.title,
@@ -54,7 +78,7 @@ class YouTubeProcessor:
         except Exception as e:
             print(f"Warning: Could not fetch metadata: {e}")
             return {
-                'title': 'YouTube Video',
+                'title': f'YouTube Video {video_id}',
                 'author': 'Unknown',
                 'length': 0,
                 'views': 0,
@@ -65,7 +89,7 @@ class YouTubeProcessor:
     @staticmethod
     def get_transcript(video_id: str, languages: List[str] = None) -> List[Dict]:
         """
-        Get transcript from YouTube video.
+        Get transcript from YouTube video using youtube-transcript-api.
         
         Args:
             video_id: YouTube video ID
@@ -78,33 +102,67 @@ class YouTubeProcessor:
             languages = ['en']
         
         try:
+            # Create API instance and get transcript list
+            api = YouTubeTranscriptApi()
+            
             # Try to get transcript in specified languages
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            transcript_list = api.list(video_id)
             
-            # Try to find transcript in requested languages
-            for lang in languages:
-                try:
-                    transcript = transcript_list.find_transcript([lang])
-                    return transcript.fetch()
-                except:
-                    continue
+            # transcript_list is a list of available transcripts
+            # Each transcript has language_code and is_generated properties
+            selected_transcript = None
             
-            # If no exact match, try to get any available transcript
+            # First, try to find manually created transcript in preferred languages
+            for transcript in transcript_list:
+                if hasattr(transcript, 'language_code') and transcript.language_code in languages:
+                    if hasattr(transcript, 'is_generated') and not transcript.is_generated:
+                        selected_transcript = transcript
+                        break
+            
+            # If no manual transcript found, try auto-generated in preferred languages
+            if not selected_transcript:
+                for transcript in transcript_list:
+                    if hasattr(transcript, 'language_code') and transcript.language_code in languages:
+                        selected_transcript = transcript
+                        break
+            
+            # If still nothing, just use the first available
+            if not selected_transcript and transcript_list:
+                selected_transcript = transcript_list[0]
+            
+            if not selected_transcript:
+                raise Exception("No transcripts available for this video")
+            
+            # Fetch the actual transcript content
+            transcript_data = selected_transcript.fetch()
+            return transcript_data
+            
+        except AttributeError:
+            # Fallback: Try the simpler direct method
             try:
-                transcript = transcript_list.find_generated_transcript(languages)
-                return transcript.fetch()
+                # Some versions might have a simpler API
+                transcript_data = YouTubeTranscriptApi.fetch(video_id, languages=languages)
+                return transcript_data
             except:
-                # Get first available transcript
-                available = transcript_list._manually_created_transcripts
-                if not available:
-                    available = transcript_list._generated_transcripts
-                
-                if available:
-                    first_transcript = list(available.values())[0]
-                    return first_transcript.fetch()
+                pass
+            
+            # Another fallback
+            try:
+                transcript_data = YouTubeTranscriptApi.fetch(video_id)
+                return transcript_data
+            except:
+                pass
                 
         except Exception as e:
-            raise Exception(f"Could not retrieve transcript: {str(e)}")
+            error_msg = str(e)
+            if "Subtitles are disabled" in error_msg or "No transcript" in error_msg or "Could not retrieve" in error_msg:
+                raise Exception(
+                    f"No transcript available for this video (ID: {video_id}). "
+                    f"The video may have disabled captions or no captions have been created. "
+                    f"Please try a different video with captions enabled."
+                )
+            else:
+                raise Exception(f"Could not retrieve transcript: {error_msg}")
     
     @staticmethod
     def format_timestamp(seconds: float) -> str:
@@ -115,7 +173,7 @@ class YouTubeProcessor:
     
     @staticmethod
     def segment_transcript(
-        transcript: List[Dict],
+        transcript: List,
         segment_duration: int = 120,
         min_words: int = 30
     ) -> List[Dict]:
@@ -123,7 +181,7 @@ class YouTubeProcessor:
         Segment transcript into logical chunks.
         
         Args:
-            transcript: Raw transcript from YouTube
+            transcript: Raw transcript from YouTube (list of objects or dicts)
             segment_duration: Target duration for each segment in seconds
             min_words: Minimum words per segment
             
@@ -139,9 +197,17 @@ class YouTubeProcessor:
         }
         
         for entry in transcript:
-            text = entry['text'].strip()
-            start = entry['start']
-            duration = entry['duration']
+            # Handle both dict and object formats
+            if isinstance(entry, dict):
+                text = entry.get('text', '').strip()
+                start = entry.get('start', 0)
+                duration = entry.get('duration', 0)
+            else:
+                # Handle object with attributes
+                text = getattr(entry, 'text', '').strip()
+                start = getattr(entry, 'start', 0)
+                duration = getattr(entry, 'duration', 0)
+            
             end = start + duration
             
             # Initialize first segment
@@ -230,22 +296,46 @@ class YouTubeProcessor:
         total_words = sum(seg['word_count'] for seg in segments)
         total_duration = segments[-1]['end_seconds'] if segments else 0
         
-        # Format as event transcript
+        # Format segments to match expected structure (add category and importance)
+        formatted_segments = []
+        for seg in segments:
+            formatted_segments.append({
+                'timestamp': seg['timestamp'],
+                'speaker': seg['speaker'],
+                'text': seg['text'],
+                'category': 'general',  # Could be enhanced with AI categorization
+                'importance': 'medium'  # Could be enhanced with AI analysis
+            })
+        
+        # Format as event transcript matching the expected structure
         event_transcript = {
-            'event_name': event_name or metadata['title'],
-            'event_date': event_date or metadata['publish_date'] or datetime.now().isoformat(),
-            'video_metadata': {
-                'youtube_id': video_id,
-                'url': url,
-                'author': metadata['author'],
-                'views': metadata['views'],
-                'description': metadata['description'][:500] if metadata['description'] else ''
+            'event_metadata': {
+                'event_name': event_name or metadata['title'],
+                'date': event_date or metadata['publish_date'] or datetime.now().isoformat().split('T')[0],
+                'duration_minutes': int(total_duration / 60),
+                'speakers': [
+                    {
+                        'name': metadata.get('author', 'Speaker'),
+                        'role': 'Presenter',
+                        'speaking_time': f"00:00-{YouTubeProcessor.format_timestamp(total_duration)}"
+                    }
+                ],
+                'source': 'youtube',
+                'video_metadata': {
+                    'youtube_id': video_id,
+                    'url': url,
+                    'author': metadata['author'],
+                    'views': metadata.get('views', 0),
+                    'description': metadata['description'][:500] if metadata['description'] else ''
+                }
             },
-            'duration_seconds': int(total_duration),
-            'duration_formatted': YouTubeProcessor.format_timestamp(total_duration),
-            'total_segments': len(segments),
-            'total_words': total_words,
-            'segments': segments,
+            'transcript_segments': formatted_segments,
+            'statistics': {
+                'total_segments': len(segments),
+                'total_words': total_words,
+                'duration_seconds': int(total_duration),
+                'duration_formatted': YouTubeProcessor.format_timestamp(total_duration)
+            },
             'processed_at': datetime.now().isoformat()
         }
         

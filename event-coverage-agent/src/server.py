@@ -34,10 +34,21 @@ MEDIA_CONTACT = settings["media_contact"]
 QUOTE_CRITERIA = templates["quote_selection_criteria"]
 HIGHLIGHT_KEYWORDS = templates["highlight_keywords"]
 
+# Global state for current transcript file
+CURRENT_TRANSCRIPT_FILE = "mock_transcript.json"
 
-def load_event_transcript() -> Dict:
+
+def set_transcript_file(event_file: str):
+    """Set the current transcript file to use."""
+    global CURRENT_TRANSCRIPT_FILE
+    CURRENT_TRANSCRIPT_FILE = event_file
+
+
+def load_event_transcript(event_file: str = None) -> Dict:
     """Load event transcript from JSON file."""
-    return load_json_file(get_data_path('mock_transcript.json'))
+    if event_file is None:
+        event_file = CURRENT_TRANSCRIPT_FILE
+    return load_json_file(get_data_path(event_file))
 
 
 @server.tool()
@@ -50,7 +61,10 @@ async def process_event_transcript(event_file: str = "mock_transcript.json") -> 
         event_file: Name of the transcript JSON file in data folder
     """
     try:
-        transcript_data = load_event_transcript()
+        # Set the global transcript file so other tools use it too
+        set_transcript_file(event_file)
+        
+        transcript_data = load_event_transcript(event_file)
         
         metadata = transcript_data.get("event_metadata", {})
         segments = transcript_data.get("transcript_segments", [])
