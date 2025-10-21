@@ -284,8 +284,31 @@
             <div class="dashboard-card text-center">
                 <h3 class="mb-4"><i class="fas fa-magic"></i> Generate Content</h3>
                 
+                <!-- YouTube URL Input -->
+                <div class="mb-4">
+                    <div class="input-group" style="max-width: 600px; margin: 0 auto;">
+                        <input 
+                            type="text" 
+                            id="youtubeUrl" 
+                            class="form-control" 
+                            placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=...)"
+                            style="border-radius: 12px 0 0 12px; padding: 1rem;">
+                        <button 
+                            class="btn action-btn btn-generate-all" 
+                            onclick="processYouTube()"
+                            style="border-radius: 0 12px 12px 0; margin: 0;">
+                            <i class="fab fa-youtube"></i> Process YouTube Video
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Or use the mock event transcript below
+                    </small>
+                </div>
+                
+                <div class="mb-3" style="border-top: 1px solid #e5e7eb; margin: 2rem 0;"></div>
+                
                 <button class="action-btn btn-generate-all" onclick="generateAll()">
-                    <i class="fas fa-rocket"></i> Generate All Content
+                    <i class="fas fa-rocket"></i> Generate All Content (Mock Data)
                 </button>
                 
                 <br>
@@ -409,6 +432,82 @@
                     alert('❌ Error: ' + result.error);
                 }
             } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Process YouTube URL
+        async function processYouTube() {
+            const youtubeUrl = document.getElementById('youtubeUrl').value.trim();
+            
+            if (!youtubeUrl) {
+                alert('⚠️ Please enter a YouTube URL');
+                return;
+            }
+            
+            // Validate YouTube URL format
+            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+            if (!youtubeRegex.test(youtubeUrl)) {
+                alert('⚠️ Please enter a valid YouTube URL');
+                return;
+            }
+            
+            showLoading();
+            document.getElementById('statusInfo').innerHTML = 
+                '<i class="fas fa-spinner fa-spin"></i> Processing YouTube video... This may take a minute.';
+            document.getElementById('statusInfo').className = 'alert alert-info alert-custom';
+            
+            try {
+                const response = await fetch('/api/process-youtube', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        youtube_url: youtubeUrl,
+                        segment_duration: 120
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Display video info
+                    document.getElementById('statusInfo').innerHTML = 
+                        `<i class="fas fa-check-circle"></i> <strong>YouTube Video Processed!</strong><br>` +
+                        `Title: ${result.video_info.title}<br>` +
+                        `Duration: ${result.video_info.duration} | ` +
+                        `Segments: ${result.video_info.segments} | ` +
+                        `Words: ${result.video_info.words}`;
+                    document.getElementById('statusInfo').className = 'alert alert-success alert-custom';
+                    
+                    // Display all generated content
+                    displayAllContent(result.data.outputs);
+                    updateStats();
+                    
+                    // Show success message with details
+                    alert(
+                        `✅ YouTube content generated successfully!\n\n` +
+                        `📊 Video Info:\n` +
+                        `• Title: ${result.video_info.title}\n` +
+                        `• Duration: ${result.video_info.duration}\n\n` +
+                        `📝 Generated:\n` +
+                        `• ${result.content_generated.quotes} press quotes\n` +
+                        `• ${result.content_generated.twitter_posts} Twitter posts\n` +
+                        `• ${result.content_generated.linkedin_posts} LinkedIn posts\n` +
+                        `• Press release: ${result.content_generated.press_release ? 'Yes' : 'No'}\n` +
+                        `• Newsletter: ${result.content_generated.newsletter ? 'Yes' : 'No'}`
+                    );
+                } else {
+                    document.getElementById('statusInfo').innerHTML = 
+                        `<i class="fas fa-exclamation-circle"></i> Error: ${result.error}`;
+                    document.getElementById('statusInfo').className = 'alert alert-danger alert-custom';
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                document.getElementById('statusInfo').innerHTML = 
+                    `<i class="fas fa-exclamation-circle"></i> Error: ${error.message}`;
+                document.getElementById('statusInfo').className = 'alert alert-danger alert-custom';
                 alert('❌ Error: ' + error.message);
             } finally {
                 hideLoading();

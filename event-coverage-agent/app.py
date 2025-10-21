@@ -21,6 +21,7 @@ from server import (
     generate_newsletter_recap,
     run_full_coverage_cycle
 )
+from youtube_processor import YouTubeProcessor
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -46,12 +47,49 @@ def index():
 
 @app.route('/api/process-transcript', methods=['POST'])
 def process_transcript():
-    """Process event transcript and prepare for content generation."""
+    """Process event transcript from file or YouTube URL."""
     try:
         data = request.json
+        youtube_url = data.get('youtube_url')
         event_file = data.get('event_file', 'mock_transcript.json')
         
-        # Run async function
+        # If YouTube URL is provided, process it first
+        if youtube_url:
+            try:
+                print(f"Processing YouTube URL: {youtube_url}")
+                
+                # Extract video ID to validate URL
+                video_id = YouTubeProcessor.extract_video_id(youtube_url)
+                if not video_id:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Invalid YouTube URL format'
+                    }), 400
+                
+                # Process YouTube video
+                transcript_data = YouTubeProcessor.process_youtube_url(
+                    url=youtube_url,
+                    event_name=data.get('event_name'),
+                    event_date=data.get('event_date'),
+                    segment_duration=data.get('segment_duration', 120)
+                )
+                
+                # Save to temporary file for processing by MCP tools
+                temp_file = Path(__file__).parent / 'data' / 'youtube_transcript.json'
+                with open(temp_file, 'w') as f:
+                    json.dump(transcript_data, f, indent=2)
+                
+                event_file = 'youtube_transcript.json'
+                
+                print(f"✓ YouTube transcript extracted: {len(transcript_data['segments'])} segments")
+                
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'YouTube processing error: {str(e)}'
+                }), 400
+        
+        # Run async function to process the transcript
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         result = loop.run_until_complete(process_event_transcript(event_file))
@@ -63,7 +101,8 @@ def process_transcript():
         
         return jsonify({
             'success': True,
-            'data': json.loads(result)
+            'data': json.loads(result),
+            'source': 'youtube' if youtube_url else 'file'
         })
     
     except Exception as e:
@@ -218,6 +257,110 @@ def generate_all():
         }), 500
 
 
+@app.route('/api/process-youtube', methods=['POST'])
+def process_youtube():
+    """
+    Process YouTube URL and generate all content in one step.
+    This is a convenience endpoint that combines transcript processing and content generation.
+    """
+    try:
+        data = request.json
+        youtube_url = data.get('youtube_url')
+        
+        if not youtube_url:
+            return jsonify({
+                'success': False,
+                'error': 'YouTube URL is required'
+            }), 400
+        
+        print(f"\n{'='*60}")
+        print(f"🎥 Processing YouTube Video")
+        print(f"{'='*60}")
+        print(f"URL: {youtube_url}\n")
+        
+        # Step 1: Extract and validate video ID
+        video_id = YouTubeProcessor.extract_video_id(youtube_url)
+        if not video_id:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid YouTube URL format. Please use a valid YouTube link.'
+            }), 400
+        
+        # Step 2: Process YouTube video and extract transcript
+        print("📥 Extracting transcript from YouTube...")
+        transcript_data = YouTubeProcessor.process_youtube_url(
+            url=youtube_url,
+            event_name=data.get('event_name'),
+            event_date=data.get('event_date'),
+            segment_duration=data.get('segment_duration', 120)
+        )
+        
+        print(f"✓ Extracted {len(transcript_data['segments'])} segments")
+        print(f"✓ Total words: {transcript_data['total_words']}")
+        print(f"✓ Duration: {transcript_data['duration_formatted']}\n")
+        
+        # Step 3: Save to temporary file
+        temp_file = Path(__file__).parent / 'data' / 'youtube_transcript.json'
+        with open(temp_file, 'w') as f:
+            json.dump(transcript_data, f, indent=2)
+        
+        # Step 4: Process transcript with MCP tools
+        print("🤖 Processing transcript with AI agent...")
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(process_event_transcript('youtube_transcript.json'))
+        loop.close()
+        
+        generated_content['transcript'] = json.loads(result)
+        
+        # Step 5: Generate all content types
+        print("📝 Generating all content types...\n")
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        all_content = loop.run_until_complete(run_full_coverage_cycle())
+        loop.close()
+        
+        result_data = json.loads(all_content)
+        
+        # Step 6: Store all results
+        if result_data.get('status') == 'success':
+            outputs = result_data.get('outputs', {})
+            generated_content['quotes'] = outputs.get('press_quotes')
+            generated_content['twitter'] = outputs.get('social_media', {}).get('twitter')
+            generated_content['linkedin'] = outputs.get('social_media', {}).get('linkedin')
+            generated_content['press_release'] = outputs.get('press_release')
+            generated_content['newsletter'] = outputs.get('newsletter')
+            generated_content['last_updated'] = datetime.now().isoformat()
+            
+            print("✅ All content generated successfully!\n")
+            print(f"{'='*60}\n")
+        
+        return jsonify({
+            'success': True,
+            'video_info': {
+                'title': transcript_data['event_name'],
+                'duration': transcript_data['duration_formatted'],
+                'segments': transcript_data['total_segments'],
+                'words': transcript_data['total_words']
+            },
+            'content_generated': {
+                'quotes': len(outputs.get('press_quotes', {}).get('quotes', [])),
+                'twitter_posts': len(outputs.get('social_media', {}).get('twitter', {}).get('posts', [])),
+                'linkedin_posts': len(outputs.get('social_media', {}).get('linkedin', {}).get('posts', [])),
+                'press_release': outputs.get('press_release') is not None,
+                'newsletter': outputs.get('newsletter') is not None
+            },
+            'data': result_data
+        })
+    
+    except Exception as e:
+        print(f"❌ Error: {str(e)}\n")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/export/<content_type>', methods=['GET'])
 def export_content(content_type):
     """Export generated content as downloadable file."""
@@ -316,7 +459,7 @@ if __name__ == '__main__':
     print("🎤 Event Coverage Agent - Web UI")
     print("=" * 60)
     print("\n🚀 Starting Flask server...")
-    print("📍 Open your browser to: http://localhost:5000")
+    print("📍 Open your browser to: http://localhost:5001")
     print("\nPress Ctrl+C to stop the server\n")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
