@@ -1,0 +1,33 @@
+{
+  "company_info": {
+    "name": "TechCorp",
+    "tagline": "Empowering Innovation Through AI",
+    "description": "TechCorp is a leading AI technology company focused on democratizing artificial intelligence for businesses of all sizes. Founded in 2020, we serve over 50,000 customers worldwide.",
+    "website": "https://www.techcorp.com",
+    "social_handles": {
+      "twitter": "@TechCorp",
+      "linkedin": "TechCorp",
+      "instagram": "@TechCorp"
+    }
+  },
+  "media_contact": {
+    "name": "Jennifer Martinez",
+    "title": "Director of Communications",
+    "email": "press@techcorp.com",
+    "phone": "+1 (555) 123-4567"
+  },
+  "event_settings": {
+    "auto_generate_hashtags": true,
+    "default_hashtags": ["#TechCorp", "#AIInnovation", "#TechLaunch"],
+    "press_release_length": "medium",
+    "social_posts_per_event": 5,
+    "newsletter_format": "html"
+  },
+  "content_preferences": {
+    "quote_attribution_style": "full",
+    "timestamp_format": "HH:MM:SS",
+    "include_speaker_titles": true,
+    "highlight_statistics": true,
+    "link_inclusion": true
+  }
+}
