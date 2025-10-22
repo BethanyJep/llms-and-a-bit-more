@@ -3,6 +3,7 @@ Event Coverage Agent
 MCP Server for automated event transcription and content generation
 """
 import json
+import asyncio
 from datetime import datetime
 from typing import List, Dict
 from mcp.server.fastmcp import FastMCP
@@ -19,6 +20,15 @@ from utils import (
     categorize_segments_by_type,
     create_executive_summary,
     extract_speaker_info
+)
+
+# Import AI generation functions
+from ai_generator import (
+    initialize_openai,
+    generate_press_quotes_ai,
+    generate_social_posts_ai,
+    generate_press_release_ai,
+    generate_newsletter_ai
 )
 
 # Create MCP server
@@ -94,34 +104,37 @@ async def process_event_transcript(event_file: str = "mock_transcript.json") -> 
 @server.tool()
 async def extract_press_quotes() -> str:
     """
-    Extract press-ready quotes from event transcript.
-    Selects the most impactful, quotable statements from speakers.
+    Extract press-ready quotes from event transcript using AI.
+    Uses OpenAI to identify the most impactful, quotable statements from speakers.
     """
     try:
+        # Initialize OpenAI client
+        try:
+            initialize_openai()
+        except ValueError as e:
+            return json.dumps({
+                "status": "error",
+                "message": f"AI configuration error: {str(e)}\nPlease check your .env file."
+            })
+        
         transcript_data = load_event_transcript()
-        segments = transcript_data.get("transcript_segments", [])
         metadata = transcript_data.get("event_metadata", {})
         
-        # Extract key quotes
-        quotes = extract_key_quotes(segments, QUOTE_CRITERIA)
+        # Use AI to extract quotes
+        print("🤖 Using AI to extract press quotes...")
+        ai_quotes = generate_press_quotes_ai(transcript_data)
         
         # Format quotes with proper attribution
         formatted_quotes = []
-        for quote in quotes:
-            # Find speaker role from metadata
-            speaker_role = "Speaker"
-            for speaker_info in metadata.get("speakers", []):
-                if speaker_info["name"] == quote["speaker"]:
-                    speaker_role = speaker_info["role"]
-                    break
-            
+        for quote in ai_quotes:
             formatted_quotes.append({
-                "quote": quote["text"],
-                "speaker": quote["speaker"],
-                "role": speaker_role,
-                "timestamp": quote["timestamp"],
-                "category": quote["category"],
-                "formatted": f'"{quote["text"]}" - {quote["speaker"]}, {speaker_role}'
+                "quote": quote.get("text"),
+                "speaker": quote.get("speaker"),
+                "role": quote.get("role", "Speaker"),
+                "timestamp": quote.get("timestamp", ""),
+                "category": quote.get("category", "general"),
+                "significance": quote.get("significance", ""),
+                "formatted": f'"{quote.get("text")}" - {quote.get("speaker")}'
             })
         
         result = {
@@ -129,6 +142,7 @@ async def extract_press_quotes() -> str:
             "event_name": metadata.get("event_name"),
             "total_quotes": len(formatted_quotes),
             "quotes": formatted_quotes,
+            "ai_generated": True,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -141,104 +155,34 @@ async def extract_press_quotes() -> str:
 @server.tool()
 async def generate_social_media_posts(platform: str = "twitter") -> str:
     """
-    Generate platform-specific social media posts from event highlights.
+    Generate platform-specific social media posts from event highlights using AI.
     
     Args:
         platform: Social media platform (twitter, linkedin, instagram)
     """
     try:
+        # Initialize OpenAI client
+        try:
+            initialize_openai()
+        except ValueError as e:
+            return json.dumps({
+                "status": "error",
+                "message": f"AI configuration error: {str(e)}\nPlease check your .env file."
+            })
+        
         transcript_data = load_event_transcript()
-        segments = transcript_data.get("transcript_segments", [])
         metadata = transcript_data.get("event_metadata", {})
-        event_name = metadata.get("event_name", "Event")
         
-        # Identify highlights
-        highlights = identify_key_highlights(segments, HIGHLIGHT_KEYWORDS)
-        
-        # Get platform specifications
-        platform_specs = templates["social_media"].get(platform, templates["social_media"]["twitter"])
-        
-        posts = []
-        
-        if platform == "twitter":
-            # Generate concise Twitter posts
-            for i, highlight in enumerate(highlights[:5]):  # Max 5 posts
-                # Extract key point
-                text = highlight["text"]
-                
-                # Check for statistics
-                stats = extract_statistics(text)
-                
-                # Generate hashtags
-                hashtags = generate_hashtags(text, event_name, 3)
-                
-                # Create tweet (under 280 chars)
-                if stats:
-                    tweet = f"🚀 {text[:200]}... {' '.join(hashtags)}"
-                else:
-                    tweet = f"💡 {text[:220]} {' '.join(hashtags)}"
-                
-                # Ensure under limit
-                if len(tweet) > 280:
-                    tweet = tweet[:270] + "... " + hashtags[-1]
-                
-                posts.append({
-                    "platform": "twitter",
-                    "content": tweet,
-                    "character_count": len(tweet),
-                    "hashtags": hashtags,
-                    "source_timestamp": highlight["timestamp"]
-                })
-        
-        elif platform == "linkedin":
-            # Generate professional LinkedIn posts
-            exec_summary = create_executive_summary(segments, 3)
-            
-            # Get key quotes
-            quotes = extract_key_quotes(segments, QUOTE_CRITERIA)[:2]
-            
-            # Create LinkedIn post
-            post_content = f"🎉 Highlights from {event_name}\n\n"
-            post_content += f"{exec_summary}\n\n"
-            post_content += "Key Takeaways:\n"
-            
-            for i, highlight in enumerate(highlights[:3]):
-                post_content += f"• {highlight['text'].split('.')[0]}\n"
-            
-            if quotes:
-                post_content += f"\n💬 {format_quote_with_attribution(quotes[0], 'full')}\n"
-            
-            post_content += f"\n{' '.join(generate_hashtags(exec_summary, event_name, 3))}"
-            
-            posts.append({
-                "platform": "linkedin",
-                "content": post_content,
-                "character_count": len(post_content),
-                "style": "professional"
-            })
-        
-        elif platform == "instagram":
-            # Generate visual-friendly Instagram captions
-            exec_summary = create_executive_summary(segments, 2)
-            
-            caption = f"✨ {event_name} ✨\n\n"
-            caption += f"{exec_summary}\n\n"
-            caption += "Swipe to see the highlights! 👉\n\n"
-            caption += ' '.join(generate_hashtags(exec_summary, event_name, 5))
-            
-            posts.append({
-                "platform": "instagram",
-                "content": caption,
-                "character_count": len(caption),
-                "style": "visual-friendly",
-                "note": "Pair with event photos/graphics"
-            })
+        # Use AI to generate posts
+        print(f"🤖 Using AI to generate {platform} posts...")
+        ai_posts = generate_social_posts_ai(transcript_data, platform)
         
         result = {
             "status": "success",
             "platform": platform,
-            "posts_generated": len(posts),
-            "posts": posts,
+            "posts_generated": len(ai_posts),
+            "posts": ai_posts,
+            "ai_generated": True,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -251,66 +195,32 @@ async def generate_social_media_posts(platform: str = "twitter") -> str:
 @server.tool()
 async def create_press_release() -> str:
     """
-    Generate a complete press release from event transcript.
+    Generate a complete press release from event transcript using AI.
     """
     try:
+        # Initialize OpenAI client
+        try:
+            initialize_openai()
+        except ValueError as e:
+            return json.dumps({
+                "status": "error",
+                "message": f"AI configuration error: {str(e)}\nPlease check your .env file."
+            })
+        
         transcript_data = load_event_transcript()
-        segments = transcript_data.get("transcript_segments", [])
         metadata = transcript_data.get("event_metadata", {})
         event_name = metadata.get("event_name", "Event")
         
-        # Get key elements
-        announcements = [s for s in segments if s.get("category") == "announcement"]
-        quotes = extract_key_quotes(segments, QUOTE_CRITERIA)
-        highlights = identify_key_highlights(segments, HIGHLIGHT_KEYWORDS)
-        
-        # Build press release
-        press_release = f"FOR IMMEDIATE RELEASE\n\n"
-        press_release += f"{event_name}\n"
-        press_release += f"{COMPANY_INFO['tagline']}\n\n"
-        
-        # Date and location
-        press_release += f"{metadata.get('date')} - "
-        
-        # Main announcement
-        if announcements:
-            main_announcement = announcements[0]["text"]
-            press_release += f"{COMPANY_INFO['name']} today {main_announcement}\n\n"
-        
-        # CEO quote
-        if quotes:
-            ceo_quote = quotes[0]
-            press_release += f'"{ceo_quote["text"]}" said {ceo_quote["speaker"]}.\n\n'
-        
-        # Key highlights
-        press_release += "Event Highlights:\n"
-        for i, highlight in enumerate(highlights[:4], 1):
-            press_release += f"• {highlight['text'].split('.')[0]}\n"
-        
-        press_release += "\n"
-        
-        # Additional quotes
-        if len(quotes) > 1:
-            press_release += "Industry Response:\n"
-            for quote in quotes[1:3]:
-                press_release += f'"{quote["text"]}" - {quote["speaker"]}\n\n'
-        
-        # About company
-        press_release += f"About {COMPANY_INFO['name']}:\n"
-        press_release += f"{COMPANY_INFO['description']}\n\n"
-        
-        # Media contact
-        press_release += "Media Contact:\n"
-        press_release += f"{MEDIA_CONTACT['name']}, {MEDIA_CONTACT['title']}\n"
-        press_release += f"{MEDIA_CONTACT['email']}\n"
-        press_release += f"{MEDIA_CONTACT['phone']}\n"
+        # Use AI to generate press release (company info extracted from transcript)
+        print("🤖 Using AI to generate press release...")
+        press_release = generate_press_release_ai(transcript_data)
         
         result = {
             "status": "success",
             "event_name": event_name,
             "press_release": press_release,
             "word_count": len(press_release.split()),
-            "quotes_included": len(quotes),
+            "ai_generated": True,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -323,73 +233,32 @@ async def create_press_release() -> str:
 @server.tool()
 async def generate_newsletter_recap() -> str:
     """
-    Generate a post-event newsletter/email recap.
+    Generate a post-event newsletter/email recap using AI.
     """
     try:
+        # Initialize OpenAI client
+        try:
+            initialize_openai()
+        except ValueError as e:
+            return json.dumps({
+                "status": "error",
+                "message": f"AI configuration error: {str(e)}\nPlease check your .env file."
+            })
+        
         transcript_data = load_event_transcript()
-        segments = transcript_data.get("transcript_segments", [])
         metadata = transcript_data.get("event_metadata", {})
         event_name = metadata.get("event_name", "Event")
         
-        # Get key content
-        exec_summary = create_executive_summary(segments, 4)
-        quotes = extract_key_quotes(segments, QUOTE_CRITERIA)
-        highlights = identify_key_highlights(segments, HIGHLIGHT_KEYWORDS)
-        categorized = categorize_segments_by_type(segments)
-        
-        # Build newsletter
-        newsletter = f"📧 {event_name} - Post-Event Recap\n\n"
-        newsletter += "=" * 60 + "\n\n"
-        
-        # Header
-        newsletter += f"Dear Subscriber,\n\n"
-        newsletter += f"Thank you for your interest in {event_name}. "
-        newsletter += "Here's your comprehensive recap of this exciting event.\n\n"
-        
-        # Executive Summary
-        newsletter += "📊 EXECUTIVE SUMMARY\n"
-        newsletter += "-" * 60 + "\n"
-        newsletter += f"{exec_summary}\n\n"
-        
-        # Key Highlights
-        newsletter += "✨ KEY HIGHLIGHTS\n"
-        newsletter += "-" * 60 + "\n"
-        for i, highlight in enumerate(highlights[:5], 1):
-            newsletter += f"{i}. {highlight['text']}\n"
-            newsletter += f"   - {highlight['speaker']} at {highlight['timestamp']}\n\n"
-        
-        # Memorable Quotes
-        newsletter += "💬 MEMORABLE QUOTES\n"
-        newsletter += "-" * 60 + "\n"
-        for quote in quotes[:3]:
-            newsletter += f'"{quote["text"]}"\n'
-            newsletter += f"   - {quote['speaker']}\n\n"
-        
-        # By Category
-        newsletter += "📁 TOPICS COVERED\n"
-        newsletter += "-" * 60 + "\n"
-        for category, segs in categorized.items():
-            newsletter += f"• {category.title()}: {len(segs)} segments\n"
-        newsletter += "\n"
-        
-        # Next Steps
-        newsletter += "🚀 NEXT STEPS\n"
-        newsletter += "-" * 60 + "\n"
-        newsletter += f"• Visit {COMPANY_INFO['website']} for more information\n"
-        newsletter += f"• Follow us on Twitter: {COMPANY_INFO['social_handles']['twitter']}\n"
-        newsletter += f"• Contact us: {MEDIA_CONTACT['email']}\n\n"
-        
-        # Footer
-        newsletter += "-" * 60 + "\n"
-        newsletter += f"© 2025 {COMPANY_INFO['name']}. All rights reserved.\n"
-        newsletter += "This is an automated recap generated from event transcription.\n"
+        # Use AI to generate newsletter (company info extracted from transcript)
+        print("🤖 Using AI to generate newsletter...")
+        newsletter = generate_newsletter_ai(transcript_data)
         
         result = {
             "status": "success",
             "event_name": event_name,
             "newsletter": newsletter,
-            "sections": ["summary", "highlights", "quotes", "topics", "next_steps"],
             "word_count": len(newsletter.split()),
+            "ai_generated": True,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -400,38 +269,50 @@ async def generate_newsletter_recap() -> str:
 
 
 @server.tool()
-async def run_full_coverage_cycle() -> str:
+async def run_full_coverage_cycle(skip_transcript_processing: bool = False) -> str:
     """
-    Run complete event coverage workflow:
-    1. Process transcript
-    2. Extract quotes
-    3. Generate social posts
-    4. Create press release
-    5. Generate newsletter
+    Run complete event coverage workflow with parallel processing for speed:
+    1. Process transcript (optional, can be skipped if already processed)
+    2. Generate all content in parallel (quotes, social, press release, newsletter)
+    
+    Args:
+        skip_transcript_processing: If True, skip transcript processing and use current global state
     """
     print("🎤 Starting full event coverage cycle...")
     
     try:
-        # Step 1: Process transcript
-        print("📝 Processing transcript...")
-        transcript_result = await process_event_transcript()
+        # Step 1: Process transcript (optional)
+        if skip_transcript_processing:
+            print(f"📝 Using already processed transcript: {CURRENT_TRANSCRIPT_FILE}")
+            # Just load it for the result
+            transcript_data = load_event_transcript()
+            transcript_result = json.dumps({
+                "status": "success",
+                "event_name": transcript_data.get("event_metadata", {}).get("event_name"),
+                "transcript_file": CURRENT_TRANSCRIPT_FILE
+            })
+        else:
+            print("📝 Processing transcript...")
+            transcript_result = await process_event_transcript()
         
-        # Step 2: Extract quotes
-        print("💬 Extracting press quotes...")
-        quotes_result = await extract_press_quotes()
+        # Step 2-5: Generate all content in parallel for maximum speed
+        print("� Generating all content in parallel...")
         
-        # Step 3: Generate social posts
-        print("📱 Generating social media posts...")
-        twitter_posts = await generate_social_media_posts("twitter")
-        linkedin_posts = await generate_social_media_posts("linkedin")
+        # Run all AI generation tasks simultaneously
+        quotes_task = extract_press_quotes()
+        twitter_task = generate_social_media_posts("twitter")
+        linkedin_task = generate_social_media_posts("linkedin")
+        press_task = create_press_release()
+        newsletter_task = generate_newsletter_recap()
         
-        # Step 4: Create press release
-        print("📰 Creating press release...")
-        press_release = await create_press_release()
-        
-        # Step 5: Generate newsletter
-        print("📧 Generating newsletter recap...")
-        newsletter = await generate_newsletter_recap()
+        # Wait for all tasks to complete in parallel
+        quotes_result, twitter_posts, linkedin_posts, press_release, newsletter = await asyncio.gather(
+            quotes_task,
+            twitter_task,
+            linkedin_task,
+            press_task,
+            newsletter_task
+        )
         
         # Compile results
         final_result = {

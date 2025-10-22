@@ -389,21 +389,24 @@
             fetch('/api/status')
                 .then(response => response.json())
                 .then(status => {
+                    // Update quotes count
                     document.getElementById('statQuotes').textContent = 
-                        status.quotes_generated ? '✓' : '—';
+                        status.quotes_count > 0 ? status.quotes_count : '—';
                     
-                    let socialCount = 0;
-                    if (status.twitter_generated) socialCount++;
-                    if (status.linkedin_generated) socialCount++;
-                    if (status.instagram_generated) socialCount++;
+                    // Update social posts count (sum of all platforms)
+                    const totalSocial = (status.twitter_count || 0) + 
+                                       (status.linkedin_count || 0) + 
+                                       (status.instagram_count || 0);
                     document.getElementById('statSocial').textContent = 
-                        socialCount > 0 ? socialCount : '—';
+                        totalSocial > 0 ? totalSocial : '—';
                     
+                    // Update press release word count
                     document.getElementById('statPress').textContent = 
-                        status.press_release_generated ? '✓' : '—';
+                        status.press_word_count > 0 ? `${status.press_word_count} words` : '—';
                     
+                    // Update newsletter word count
                     document.getElementById('statNewsletter').textContent = 
-                        status.newsletter_generated ? '✓' : '—';
+                        status.newsletter_word_count > 0 ? `${status.newsletter_word_count} words` : '—';
                     
                     if (status.last_updated) {
                         document.getElementById('statusInfo').innerHTML = 
@@ -471,14 +474,18 @@
                 
                 const result = await response.json();
                 
-                if (result.success) {
+                console.log('YouTube API Response:', result); // Debug log
+                
+                if (result.success && result.video_info && result.data && result.data.outputs) {
+                    console.log('Outputs received:', result.data.outputs); // Debug log
+                    
                     // Display video info
                     document.getElementById('statusInfo').innerHTML = 
                         `<i class="fas fa-check-circle"></i> <strong>YouTube Video Processed!</strong><br>` +
-                        `Title: ${result.video_info.title}<br>` +
-                        `Duration: ${result.video_info.duration} | ` +
-                        `Segments: ${result.video_info.segments} | ` +
-                        `Words: ${result.video_info.words}`;
+                        `Title: ${result.video_info.title || 'Unknown'}<br>` +
+                        `Duration: ${result.video_info.duration || 'N/A'} | ` +
+                        `Segments: ${result.video_info.segments || 0} | ` +
+                        `Words: ${result.video_info.words || 0}`;
                     document.getElementById('statusInfo').className = 'alert alert-success alert-custom';
                     
                     // Display all generated content
@@ -616,17 +623,21 @@
             const contentArea = document.getElementById('contentArea');
             let html = '<div class="dashboard-card content-card">';
             html += '<h4><i class="fas fa-quote-left"></i> Press-Ready Quotes</h4>';
-            html += `<p class="text-muted">Event: ${data.event_name} | Total: ${data.total_quotes} quotes</p>`;
+            html += `<p class="text-muted">Event: ${data.event_name || 'Unknown'} | Total: ${data.total_quotes || 0} quotes</p>`;
             
-            data.quotes.forEach((quote, index) => {
-                html += `
-                    <div class="quote-item">
-                        <p class="mb-2"><strong>${index + 1}.</strong> "${quote.quote}"</p>
-                        <p class="text-muted mb-0"><em>— ${quote.speaker}, ${quote.role}</em></p>
-                        <small class="text-muted">Category: ${quote.category} | Timestamp: ${quote.timestamp}</small>
-                    </div>
-                `;
-            });
+            if (data.quotes && Array.isArray(data.quotes)) {
+                data.quotes.forEach((quote, index) => {
+                    html += `
+                        <div class="quote-item">
+                            <p class="mb-2"><strong>${index + 1}.</strong> "${quote.quote || quote.text || ''}"</p>
+                            <p class="text-muted mb-0"><em>— ${quote.speaker || 'Unknown'}, ${quote.role || 'Speaker'}</em></p>
+                            <small class="text-muted">Category: ${quote.category || 'general'} | Timestamp: ${quote.timestamp || 'N/A'}</small>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p class="text-muted">No quotes available</p>';
+            }
             
             html += '<button class="export-btn mt-3" onclick="exportContent(\'quotes\')"><i class="fas fa-download"></i> Export Quotes</button>';
             html += '</div>';
@@ -637,21 +648,25 @@
         function displaySocialPosts(data, platform) {
             const contentArea = document.getElementById('contentArea');
             let html = '<div class="dashboard-card content-card">';
-            html += `<h4><i class="fas fa-share-alt"></i> ${platform.charAt(0).toUpperCase() + platform.slice(1)} Posts</h4>`;
-            html += `<p class="text-muted">Generated: ${data.posts_generated} posts</p>`;
+            html += `<h4><i class="fas fa-share-alt"></i> ${platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Social'} Posts</h4>`;
+            html += `<p class="text-muted">Generated: ${data.posts_generated || 0} posts</p>`;
             
-            data.posts.forEach((post, index) => {
-                const badgeClass = `badge-${platform}`;
-                html += `
-                    <div class="social-post">
-                        <span class="platform-badge ${badgeClass}">
-                            <i class="fab fa-${platform}"></i> ${platform.toUpperCase()}
-                        </span>
-                        <p class="mt-2">${post.content}</p>
-                        <small class="text-muted">Characters: ${post.character_count || 'N/A'}</small>
-                    </div>
-                `;
-            });
+            if (data.posts && Array.isArray(data.posts)) {
+                data.posts.forEach((post, index) => {
+                    const badgeClass = `badge-${platform}`;
+                    html += `
+                        <div class="social-post">
+                            <span class="platform-badge ${badgeClass}">
+                                <i class="fab fa-${platform}"></i> ${platform ? platform.toUpperCase() : 'POST'}
+                            </span>
+                            <p class="mt-2">${post.content || ''}</p>
+                            <small class="text-muted">Characters: ${post.character_count || 'N/A'}</small>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p class="text-muted">No posts available</p>';
+            }
             
             html += `<button class="export-btn mt-3" onclick="exportContent('${platform}')"><i class="fas fa-download"></i> Export Posts</button>`;
             html += '</div>';
@@ -663,8 +678,8 @@
             const contentArea = document.getElementById('contentArea');
             let html = '<div class="dashboard-card content-card">';
             html += '<h4><i class="fas fa-newspaper"></i> Press Release</h4>';
-            html += `<p class="text-muted">Event: ${data.event_name} | Word Count: ${data.word_count}</p>`;
-            html += `<pre>${escapeHtml(data.press_release)}</pre>`;
+            html += `<p class="text-muted">Event: ${data.event_name || 'Unknown'} | Word Count: ${data.word_count || 0}</p>`;
+            html += `<pre>${escapeHtml(data.press_release || 'No content available')}</pre>`;
             html += '<button class="export-btn mt-3" onclick="exportContent(\'press_release\')"><i class="fas fa-download"></i> Export Press Release</button>';
             html += '</div>';
             
@@ -675,8 +690,8 @@
             const contentArea = document.getElementById('contentArea');
             let html = '<div class="dashboard-card content-card">';
             html += '<h4><i class="fas fa-envelope"></i> Newsletter Recap</h4>';
-            html += `<p class="text-muted">Event: ${data.event_name} | Word Count: ${data.word_count}</p>`;
-            html += `<pre>${escapeHtml(data.newsletter)}</pre>`;
+            html += `<p class="text-muted">Event: ${data.event_name || 'Unknown'} | Word Count: ${data.word_count || 0}</p>`;
+            html += `<pre>${escapeHtml(data.newsletter || 'No content available')}</pre>`;
             html += '<button class="export-btn mt-3" onclick="exportContent(\'newsletter\')"><i class="fas fa-download"></i> Export Newsletter</button>';
             html += '</div>';
             
@@ -684,39 +699,58 @@
         }
 
         function displayAllContent(outputs) {
+            console.log('displayAllContent called with:', outputs); // Debug log
             let html = '';
             
             // Quotes
-            if (outputs.press_quotes) {
+            if (outputs.press_quotes && outputs.press_quotes.quotes && Array.isArray(outputs.press_quotes.quotes)) {
+                console.log('Displaying quotes:', outputs.press_quotes.quotes.length); // Debug log
                 html += '<div class="dashboard-card content-card">';
                 html += '<h4><i class="fas fa-quote-left"></i> Press Quotes</h4>';
                 outputs.press_quotes.quotes.slice(0, 3).forEach((quote, index) => {
-                    html += `<div class="quote-item"><p>"${quote.quote}"</p><small>— ${quote.speaker}</small></div>`;
+                    html += `<div class="quote-item"><p>"${quote.quote || quote.text || ''}"</p><small>— ${quote.speaker || 'Unknown'}</small></div>`;
                 });
                 html += '</div>';
+            } else {
+                console.log('No quotes found or invalid format:', outputs.press_quotes); // Debug log
             }
             
             // Social Media
             if (outputs.social_media) {
+                console.log('Social media data:', outputs.social_media); // Debug log
                 html += '<div class="dashboard-card content-card">';
                 html += '<h4><i class="fas fa-share-alt"></i> Social Media Posts</h4>';
-                if (outputs.social_media.twitter) {
+                if (outputs.social_media.twitter && outputs.social_media.twitter.posts && Array.isArray(outputs.social_media.twitter.posts)) {
+                    console.log('Displaying Twitter posts:', outputs.social_media.twitter.posts.length); // Debug log
                     html += '<h5>Twitter</h5>';
                     outputs.social_media.twitter.posts.slice(0, 2).forEach(post => {
-                        html += `<div class="social-post">${post.content}</div>`;
+                        html += `<div class="social-post">${post.content || ''}</div>`;
                     });
+                } else {
+                    console.log('No Twitter posts or invalid format'); // Debug log
                 }
                 html += '</div>';
+            } else {
+                console.log('No social media data'); // Debug log
             }
             
             // Press Release
-            if (outputs.press_release) {
+            if (outputs.press_release && outputs.press_release.press_release) {
+                console.log('Displaying press release'); // Debug log
                 html += '<div class="dashboard-card content-card">';
                 html += '<h4><i class="fas fa-newspaper"></i> Press Release</h4>';
                 html += `<pre>${escapeHtml(outputs.press_release.press_release.substring(0, 500))}...</pre>`;
                 html += '</div>';
+            } else {
+                console.log('No press release or invalid format:', outputs.press_release); // Debug log
             }
             
+            if (html === '') {
+                console.log('No content to display - showing fallback message'); // Debug log
+                html = '<div class="dashboard-card"><p class="text-muted">No content generated yet. Process a YouTube video or transcript first.</p></div>';
+            }
+            
+            console.log('Final HTML length:', html.length); // Debug log
             document.getElementById('contentArea').innerHTML = html;
         }
 

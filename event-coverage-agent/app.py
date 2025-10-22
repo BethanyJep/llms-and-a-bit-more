@@ -19,7 +19,8 @@ from server import (
     generate_social_media_posts,
     create_press_release,
     generate_newsletter_recap,
-    run_full_coverage_cycle
+    run_full_coverage_cycle,
+    set_transcript_file
 )
 from youtube_processor import YouTubeProcessor
 
@@ -81,7 +82,7 @@ def process_transcript():
                 
                 event_file = 'youtube_transcript.json'
                 
-                print(f"✓ YouTube transcript extracted: {len(transcript_data['segments'])} segments")
+                print(f"✓ YouTube transcript extracted: {len(transcript_data['transcript_segments'])} segments")
                 
             except Exception as e:
                 return jsonify({
@@ -224,12 +225,12 @@ def generate_newsletter():
 
 @app.route('/api/generate-all', methods=['POST'])
 def generate_all():
-    """Generate all content types at once."""
+    """Generate all content types at once using the currently loaded transcript."""
     try:
-        # Run async function
+        # Run async function with skip_transcript_processing=True since transcript should already be loaded
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(run_full_coverage_cycle())
+        result = loop.run_until_complete(run_full_coverage_cycle(skip_transcript_processing=True))
         loop.close()
         
         result_data = json.loads(result)
@@ -295,16 +296,20 @@ def process_youtube():
             segment_duration=data.get('segment_duration', 120)
         )
         
-        print(f"✓ Extracted {len(transcript_data['segments'])} segments")
-        print(f"✓ Total words: {transcript_data['total_words']}")
-        print(f"✓ Duration: {transcript_data['duration_formatted']}\n")
+        print(f"✓ Extracted {len(transcript_data['transcript_segments'])} segments")
+        print(f"✓ Total words: {transcript_data['statistics']['total_words']}")
+        print(f"✓ Duration: {transcript_data['statistics']['duration_formatted']}\n")
         
         # Step 3: Save to temporary file
         temp_file = Path(__file__).parent / 'data' / 'youtube_transcript.json'
         with open(temp_file, 'w') as f:
             json.dump(transcript_data, f, indent=2)
         
-        # Step 4: Process transcript with MCP tools
+        # Step 4: Tell the MCP server to use this transcript file
+        set_transcript_file('youtube_transcript.json')
+        print(f"✓ Set transcript file to: youtube_transcript.json\n")
+        
+        # Step 5: Process transcript with MCP tools
         print("🤖 Processing transcript with AI agent...")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -313,11 +318,11 @@ def process_youtube():
         
         generated_content['transcript'] = json.loads(result)
         
-        # Step 5: Generate all content types
+        # Step 6: Generate all content types (skip transcript processing since we already did it)
         print("📝 Generating all content types...\n")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        all_content = loop.run_until_complete(run_full_coverage_cycle())
+        all_content = loop.run_until_complete(run_full_coverage_cycle(skip_transcript_processing=True))
         loop.close()
         
         result_data = json.loads(all_content)
@@ -338,10 +343,10 @@ def process_youtube():
         return jsonify({
             'success': True,
             'video_info': {
-                'title': transcript_data['event_name'],
-                'duration': transcript_data['duration_formatted'],
-                'segments': transcript_data['total_segments'],
-                'words': transcript_data['total_words']
+                'title': transcript_data['event_metadata']['event_name'],
+                'duration': transcript_data['statistics']['duration_formatted'],
+                'segments': transcript_data['statistics']['total_segments'],
+                'words': transcript_data['statistics']['total_words']
             },
             'content_generated': {
                 'quotes': len(outputs.get('press_quotes', {}).get('quotes', [])),
@@ -414,14 +419,45 @@ def export_content(content_type):
 @app.route('/api/status', methods=['GET'])
 def get_status():
     """Get current generation status."""
+    # Count actual content
+    quotes_count = 0
+    if generated_content['quotes'] and generated_content['quotes'].get('status') == 'success':
+        quotes_count = len(generated_content['quotes'].get('quotes', []))
+    
+    twitter_count = 0
+    if generated_content['twitter'] and generated_content['twitter'].get('status') == 'success':
+        twitter_count = len(generated_content['twitter'].get('posts', []))
+    
+    linkedin_count = 0
+    if generated_content['linkedin'] and generated_content['linkedin'].get('status') == 'success':
+        linkedin_count = len(generated_content['linkedin'].get('posts', []))
+    
+    instagram_count = 0
+    if generated_content['instagram'] and generated_content['instagram'].get('status') == 'success':
+        instagram_count = len(generated_content['instagram'].get('posts', []))
+    
+    press_word_count = 0
+    if generated_content['press_release'] and generated_content['press_release'].get('status') == 'success':
+        press_word_count = generated_content['press_release'].get('word_count', 0)
+    
+    newsletter_word_count = 0
+    if generated_content['newsletter'] and generated_content['newsletter'].get('status') == 'success':
+        newsletter_word_count = generated_content['newsletter'].get('word_count', 0)
+    
     status = {
         'transcript_processed': generated_content['transcript'] is not None,
         'quotes_generated': generated_content['quotes'] is not None,
+        'quotes_count': quotes_count,
         'twitter_generated': generated_content['twitter'] is not None,
+        'twitter_count': twitter_count,
         'linkedin_generated': generated_content['linkedin'] is not None,
+        'linkedin_count': linkedin_count,
         'instagram_generated': generated_content['instagram'] is not None,
+        'instagram_count': instagram_count,
         'press_release_generated': generated_content['press_release'] is not None,
+        'press_word_count': press_word_count,
         'newsletter_generated': generated_content['newsletter'] is not None,
+        'newsletter_word_count': newsletter_word_count,
         'last_updated': generated_content['last_updated']
     }
     
