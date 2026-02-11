@@ -1,0 +1,4 @@
+agent-framework[azure]
+azure-identity==1.19.0
+spotipy==2.24.0
+python-dotenv==1.1.0
