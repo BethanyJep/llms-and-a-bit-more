@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Coverage Agent - Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            padding: 2rem 0;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-section {
+            text-align: center;
+            color: white;
+            padding: 3rem 0;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .action-btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: none;
+            margin: 0.5rem;
+            min-width: 200px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-generate-all {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-quotes {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-social {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-press {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .btn-newsletter {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .content-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .content-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .quote-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--success-color);
+        }
+
+        .social-post {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .platform-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .badge-twitter {
+            background: #1da1f2;
+            color: white;
+        }
+
+        .badge-linkedin {
+            background: #0077b5;
+            color: white;
+        }
+
+        .badge-instagram {
+            background: #e1306c;
+            color: white;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-success {
+            background: var(--success-color);
+        }
+
+        .status-pending {
+            background: var(--warning-color);
+        }
+
+        .export-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: #3730a3;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .alert-custom {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.5rem;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="container">
+                <h1><i class="fas fa-microphone"></i> Event Coverage Agent</h1>
+                <p>Automated PR Content Generation from Event Transcripts</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Stats Dashboard -->
+            <div class="dashboard-card">
+                <h3 class="mb-4"><i class="fas fa-chart-bar"></i> Generation Status</h3>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="statQuotes">0</div>
+                        <div class="stat-label">Press Quotes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statSocial">0</div>
+                        <div class="stat-label">Social Posts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statPress">0</div>
+                        <div class="stat-label">Press Release</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statNewsletter">0</div>
+                        <div class="stat-label">Newsletter</div>
+                    </div>
+                </div>
+
+                <div id="statusInfo" class="alert alert-info alert-custom">
+                    <i class="fas fa-info-circle"></i> Click a button below to generate content
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="dashboard-card text-center">
+                <h3 class="mb-4"><i class="fas fa-magic"></i> Generate Content</h3>
+                
+                <!-- YouTube URL Input -->
+                <div class="mb-4">
+                    <div class="input-group" style="max-width: 600px; margin: 0 auto;">
+                        <input 
+                            type="text" 
+                            id="youtubeUrl" 
+                            class="form-control" 
+                            placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=...)"
+                            style="border-radius: 12px 0 0 12px; padding: 1rem;">
+                        <button 
+                            class="btn action-btn btn-generate-all" 
+                            onclick="processYouTube()"
+                            style="border-radius: 0 12px 12px 0; margin: 0;">
+                            <i class="fab fa-youtube"></i> Process YouTube Video
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Or use the mock event transcript below
+                    </small>
+                </div>
+                
+                <div class="mb-3" style="border-top: 1px solid #e5e7eb; margin: 2rem 0;"></div>
+                
+                <button class="action-btn btn-generate-all" onclick="generateAll()">
+                    <i class="fas fa-rocket"></i> Generate All Content (Mock Data)
+                </button>
+                
+                <br>
+                
+                <button class="action-btn btn-quotes" onclick="generateQuotes()">
+                    <i class="fas fa-quote-left"></i> Press Quotes
+                </button>
+                
+                <button class="action-btn btn-social" onclick="showSocialMenu()">
+                    <i class="fas fa-share-alt"></i> Social Media Posts
+                </button>
+                
+                <button class="action-btn btn-press" onclick="generatePressRelease()">
+                    <i class="fas fa-newspaper"></i> Press Release
+                </button>
+                
+                <button class="action-btn btn-newsletter" onclick="generateNewsletter()">
+                    <i class="fas fa-envelope"></i> Newsletter
+                </button>
+
+                <br>
+
+                <button class="btn btn-outline-secondary mt-3" onclick="clearAll()">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+
+            <!-- Social Media Menu (Hidden by default) -->
+            <div id="socialMenu" class="dashboard-card text-center" style="display: none;">
+                <h4 class="mb-3">Select Platform</h4>
+                <button class="action-btn btn-social" onclick="generateSocial('twitter')">
+                    <i class="fab fa-twitter"></i> Twitter
+                </button>
+                <button class="action-btn btn-social" onclick="generateSocial('linkedin')">
+                    <i class="fab fa-linkedin"></i> LinkedIn
+                </button>
+                <button class="action-btn btn-social" onclick="generateSocial('instagram')">
+                    <i class="fab fa-instagram"></i> Instagram
+                </button>
+                <button class="btn btn-outline-secondary" onclick="hideSocialMenu()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="mt-3">Generating content with AI...</p>
+            </div>
+
+            <!-- Content Display Area -->
+            <div id="contentArea"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show/Hide loading indicator
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        // Show/Hide social menu
+        function showSocialMenu() {
+            document.getElementById('socialMenu').style.display = 'block';
+        }
+
+        function hideSocialMenu() {
+            document.getElementById('socialMenu').style.display = 'none';
+        }
+
+        // Update stats dashboard
+        function updateStats() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(status => {
+                    // Update quotes count
+                    document.getElementById('statQuotes').textContent = 
+                        status.quotes_count > 0 ? status.quotes_count : '—';
+                    
+                    // Update social posts count (sum of all platforms)
+                    const totalSocial = (status.twitter_count || 0) + 
+                                       (status.linkedin_count || 0) + 
+                                       (status.instagram_count || 0);
+                    document.getElementById('statSocial').textContent = 
+                        totalSocial > 0 ? totalSocial : '—';
+                    
+                    // Update press release word count
+                    document.getElementById('statPress').textContent = 
+                        status.press_word_count > 0 ? `${status.press_word_count} words` : '—';
+                    
+                    // Update newsletter word count
+                    document.getElementById('statNewsletter').textContent = 
+                        status.newsletter_word_count > 0 ? `${status.newsletter_word_count} words` : '—';
+                    
+                    if (status.last_updated) {
+                        document.getElementById('statusInfo').innerHTML = 
+                            `<i class="fas fa-check-circle"></i> Last updated: ${new Date(status.last_updated).toLocaleString()}`;
+                        document.getElementById('statusInfo').className = 'alert alert-success alert-custom';
+                    }
+                });
+        }
+
+        // Generate all content
+        async function generateAll() {
+            showLoading();
+            try {
+                const response = await fetch('/api/generate-all', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayAllContent(result.data.outputs);
+                    updateStats();
+                    alert('✅ All content generated successfully!');
+                } else {
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Process YouTube URL
+        async function processYouTube() {
+            const youtubeUrl = document.getElementById('youtubeUrl').value.trim();
+            
+            if (!youtubeUrl) {
+                alert('⚠️ Please enter a YouTube URL');
+                return;
+            }
+            
+            // Validate YouTube URL format
+            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+            if (!youtubeRegex.test(youtubeUrl)) {
+                alert('⚠️ Please enter a valid YouTube URL');
+                return;
+            }
+            
+            showLoading();
+            document.getElementById('statusInfo').innerHTML = 
+                '<i class="fas fa-spinner fa-spin"></i> Processing YouTube video... This may take a minute.';
+            document.getElementById('statusInfo').className = 'alert alert-info alert-custom';
+            
+            try {
+                const response = await fetch('/api/process-youtube', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        youtube_url: youtubeUrl,
+                        segment_duration: 120
+                    })
+                });
+                
+                const result = await response.json();
+                
+                console.log('YouTube API Response:', result); // Debug log
+                
+                if (result.success && result.video_info && result.data && result.data.outputs) {
+                    console.log('Outputs received:', result.data.outputs); // Debug log
+                    
+                    // Display video info
+                    document.getElementById('statusInfo').innerHTML = 
+                        `<i class="fas fa-check-circle"></i> <strong>YouTube Video Processed!</strong><br>` +
+                        `Title: ${result.video_info.title || 'Unknown'}<br>` +
+                        `Duration: ${result.video_info.duration || 'N/A'} | ` +
+                        `Segments: ${result.video_info.segments || 0} | ` +
+                        `Words: ${result.video_info.words || 0}`;
+                    document.getElementById('statusInfo').className = 'alert alert-success alert-custom';
+                    
+                    // Display all generated content
+                    displayAllContent(result.data.outputs);
+                    updateStats();
+                    
+                    // Show success message with details
+                    alert(
+                        `✅ YouTube content generated successfully!\n\n` +
+                        `📊 Video Info:\n` +
+                        `• Title: ${result.video_info.title}\n` +
+                        `• Duration: ${result.video_info.duration}\n\n` +
+                        `📝 Generated:\n` +
+                        `• ${result.content_generated.quotes} press quotes\n` +
+                        `• ${result.content_generated.twitter_posts} Twitter posts\n` +
+                        `• ${result.content_generated.linkedin_posts} LinkedIn posts\n` +
+                        `• Press release: ${result.content_generated.press_release ? 'Yes' : 'No'}\n` +
+                        `• Newsletter: ${result.content_generated.newsletter ? 'Yes' : 'No'}`
+                    );
+                } else {
+                    document.getElementById('statusInfo').innerHTML = 
+                        `<i class="fas fa-exclamation-circle"></i> Error: ${result.error}`;
+                    document.getElementById('statusInfo').className = 'alert alert-danger alert-custom';
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                document.getElementById('statusInfo').innerHTML = 
+                    `<i class="fas fa-exclamation-circle"></i> Error: ${error.message}`;
+                document.getElementById('statusInfo').className = 'alert alert-danger alert-custom';
+                alert('❌ Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Generate press quotes
+        async function generateQuotes() {
+            showLoading();
+            try {
+                const response = await fetch('/api/generate-quotes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayQuotes(result.data);
+                    updateStats();
+                } else {
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Generate social media posts
+        async function generateSocial(platform) {
+            hideSocialMenu();
+            showLoading();
+            try {
+                const response = await fetch(`/api/generate-social/${platform}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displaySocialPosts(result.data, platform);
+                    updateStats();
+                } else {
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Generate press release
+        async function generatePressRelease() {
+            showLoading();
+            try {
+                const response = await fetch('/api/generate-press-release', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayPressRelease(result.data);
+                    updateStats();
+                } else {
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Generate newsletter
+        async function generateNewsletter() {
+            showLoading();
+            try {
+                const response = await fetch('/api/generate-newsletter', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayNewsletter(result.data);
+                    updateStats();
+                } else {
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Display functions
+        function displayQuotes(data) {
+            const contentArea = document.getElementById('contentArea');
+            let html = '<div class="dashboard-card content-card">';
+            html += '<h4><i class="fas fa-quote-left"></i> Press-Ready Quotes</h4>';
+            html += `<p class="text-muted">Event: ${data.event_name || 'Unknown'} | Total: ${data.total_quotes || 0} quotes</p>`;
+            
+            if (data.quotes && Array.isArray(data.quotes)) {
+                data.quotes.forEach((quote, index) => {
+                    html += `
+                        <div class="quote-item">
+                            <p class="mb-2"><strong>${index + 1}.</strong> "${quote.quote || quote.text || ''}"</p>
+                            <p class="text-muted mb-0"><em>— ${quote.speaker || 'Unknown'}, ${quote.role || 'Speaker'}</em></p>
+                            <small class="text-muted">Category: ${quote.category || 'general'} | Timestamp: ${quote.timestamp || 'N/A'}</small>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p class="text-muted">No quotes available</p>';
+            }
+            
+            html += '<button class="export-btn mt-3" onclick="exportContent(\'quotes\')"><i class="fas fa-download"></i> Export Quotes</button>';
+            html += '</div>';
+            
+            contentArea.innerHTML = html;
+        }
+
+        function displaySocialPosts(data, platform) {
+            const contentArea = document.getElementById('contentArea');
+            let html = '<div class="dashboard-card content-card">';
+            html += `<h4><i class="fas fa-share-alt"></i> ${platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Social'} Posts</h4>`;
+            html += `<p class="text-muted">Generated: ${data.posts_generated || 0} posts</p>`;
+            
+            if (data.posts && Array.isArray(data.posts)) {
+                data.posts.forEach((post, index) => {
+                    const badgeClass = `badge-${platform}`;
+                    html += `
+                        <div class="social-post">
+                            <span class="platform-badge ${badgeClass}">
+                                <i class="fab fa-${platform}"></i> ${platform ? platform.toUpperCase() : 'POST'}
+                            </span>
+                            <p class="mt-2">${post.content || ''}</p>
+                            <small class="text-muted">Characters: ${post.character_count || 'N/A'}</small>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p class="text-muted">No posts available</p>';
+            }
+            
+            html += `<button class="export-btn mt-3" onclick="exportContent('${platform}')"><i class="fas fa-download"></i> Export Posts</button>`;
+            html += '</div>';
+            
+            contentArea.innerHTML = html;
+        }
+
+        function displayPressRelease(data) {
+            const contentArea = document.getElementById('contentArea');
+            let html = '<div class="dashboard-card content-card">';
+            html += '<h4><i class="fas fa-newspaper"></i> Press Release</h4>';
+            html += `<p class="text-muted">Event: ${data.event_name || 'Unknown'} | Word Count: ${data.word_count || 0}</p>`;
+            html += `<pre>${escapeHtml(data.press_release || 'No content available')}</pre>`;
+            html += '<button class="export-btn mt-3" onclick="exportContent(\'press_release\')"><i class="fas fa-download"></i> Export Press Release</button>';
+            html += '</div>';
+            
+            contentArea.innerHTML = html;
+        }
+
+        function displayNewsletter(data) {
+            const contentArea = document.getElementById('contentArea');
+            let html = '<div class="dashboard-card content-card">';
+            html += '<h4><i class="fas fa-envelope"></i> Newsletter Recap</h4>';
+            html += `<p class="text-muted">Event: ${data.event_name || 'Unknown'} | Word Count: ${data.word_count || 0}</p>`;
+            html += `<pre>${escapeHtml(data.newsletter || 'No content available')}</pre>`;
+            html += '<button class="export-btn mt-3" onclick="exportContent(\'newsletter\')"><i class="fas fa-download"></i> Export Newsletter</button>';
+            html += '</div>';
+            
+            contentArea.innerHTML = html;
+        }
+
+        function displayAllContent(outputs) {
+            console.log('displayAllContent called with:', outputs); // Debug log
+            let html = '';
+            
+            // Quotes
+            if (outputs.press_quotes && outputs.press_quotes.quotes && Array.isArray(outputs.press_quotes.quotes)) {
+                console.log('Displaying quotes:', outputs.press_quotes.quotes.length); // Debug log
+                html += '<div class="dashboard-card content-card">';
+                html += '<h4><i class="fas fa-quote-left"></i> Press Quotes</h4>';
+                outputs.press_quotes.quotes.slice(0, 3).forEach((quote, index) => {
+                    html += `<div class="quote-item"><p>"${quote.quote || quote.text || ''}"</p><small>— ${quote.speaker || 'Unknown'}</small></div>`;
+                });
+                html += '</div>';
+            } else {
+                console.log('No quotes found or invalid format:', outputs.press_quotes); // Debug log
+            }
+            
+            // Social Media
+            if (outputs.social_media) {
+                console.log('Social media data:', outputs.social_media); // Debug log
+                html += '<div class="dashboard-card content-card">';
+                html += '<h4><i class="fas fa-share-alt"></i> Social Media Posts</h4>';
+                if (outputs.social_media.twitter && outputs.social_media.twitter.posts && Array.isArray(outputs.social_media.twitter.posts)) {
+                    console.log('Displaying Twitter posts:', outputs.social_media.twitter.posts.length); // Debug log
+                    html += '<h5>Twitter</h5>';
+                    outputs.social_media.twitter.posts.slice(0, 2).forEach(post => {
+                        html += `<div class="social-post">${post.content || ''}</div>`;
+                    });
+                } else {
+                    console.log('No Twitter posts or invalid format'); // Debug log
+                }
+                html += '</div>';
+            } else {
+                console.log('No social media data'); // Debug log
+            }
+            
+            // Press Release
+            if (outputs.press_release && outputs.press_release.press_release) {
+                console.log('Displaying press release'); // Debug log
+                html += '<div class="dashboard-card content-card">';
+                html += '<h4><i class="fas fa-newspaper"></i> Press Release</h4>';
+                html += `<pre>${escapeHtml(outputs.press_release.press_release.substring(0, 500))}...</pre>`;
+                html += '</div>';
+            } else {
+                console.log('No press release or invalid format:', outputs.press_release); // Debug log
+            }
+            
+            if (html === '') {
+                console.log('No content to display - showing fallback message'); // Debug log
+                html = '<div class="dashboard-card"><p class="text-muted">No content generated yet. Process a YouTube video or transcript first.</p></div>';
+            }
+            
+            console.log('Final HTML length:', html.length); // Debug log
+            document.getElementById('contentArea').innerHTML = html;
+        }
+
+        // Export content
+        function exportContent(contentType) {
+            window.location.href = `/api/export/${contentType}`;
+        }
+
+        // Clear all content
+        async function clearAll() {
+            if (confirm('Are you sure you want to clear all generated content?')) {
+                await fetch('/api/clear', {method: 'POST'});
+                document.getElementById('contentArea').innerHTML = '';
+                updateStats();
+                document.getElementById('statusInfo').innerHTML = 
+                    '<i class="fas fa-info-circle"></i> Click a button below to generate content';
+                document.getElementById('statusInfo').className = 'alert alert-info alert-custom';
+            }
+        }
+
+        // Utility function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize
+        updateStats();
+        setInterval(updateStats, 10000); // Update stats every 10 seconds
+    </script>
+</body>
+</html>

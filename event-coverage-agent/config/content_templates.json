@@ -1,0 +1,63 @@
+{
+  "press_release": {
+    "template": "FOR IMMEDIATE RELEASE\n\n{title}\n\n{location}, {date} - {company} today announced {main_announcement}. {ceo_quote}\n\n{body}\n\n{additional_quotes}\n\nAbout {company}:\n{company_description}\n\nMedia Contact:\n{contact_info}",
+    "quote_markers": ["announced", "stated", "said", "emphasized", "noted"],
+    "key_categories": ["announcement", "vision", "product", "closing"]
+  },
+  "social_media": {
+    "twitter": {
+      "max_length": 280,
+      "hashtag_count": 3,
+      "style": "concise, engaging, professional"
+    },
+    "linkedin": {
+      "max_length": 3000,
+      "style": "professional, detailed, industry-focused"
+    },
+    "instagram": {
+      "max_length": 2200,
+      "style": "visual-friendly, aspirational, brand-focused"
+    }
+  },
+  "newsletter": {
+    "sections": [
+      "header",
+      "event_summary",
+      "key_highlights",
+      "quotes",
+      "next_steps",
+      "footer"
+    ],
+    "tone": "informative, engaging, approachable"
+  },
+  "quote_selection_criteria": {
+    "min_words": 10,
+    "max_words": 50,
+    "importance_threshold": "high",
+    "categories_priority": ["announcement", "vision", "product", "philosophy"]
+  },
+  "content_templates": {
+    "twitter_formats": [
+      "🚀 {announcement} {hashtags}",
+      "💡 {quote} - {speaker}, {role} {hashtags}",
+      "📢 Big news! {highlight} {link} {hashtags}"
+    ],
+    "linkedin_formats": [
+      "Exciting announcement from {event_name}:\n\n{summary}\n\n{quote}\n\n{call_to_action}",
+      "Key takeaways from {event_name}:\n\n• {point1}\n• {point2}\n• {point3}\n\n{quote}"
+    ]
+  },
+  "highlight_keywords": [
+    "announce",
+    "launch",
+    "introduce",
+    "reveal",
+    "proud to",
+    "excited to",
+    "game-changing",
+    "revolutionary",
+    "innovative",
+    "first-ever",
+    "breaking"
+  ]
+}

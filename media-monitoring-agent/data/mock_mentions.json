@@ -1,0 +1,89 @@
+[
+  {
+    "id": 1,
+    "platform": "twitter",
+    "text": "Just got my hands on the new product from @TechCorp - absolutely loving it! Best purchase this year 🎉",
+    "author": "@techfan2024",
+    "timestamp": "2025-10-21T08:30:00Z",
+    "engagement": {
+      "likes": 245,
+      "retweets": 89
+    }
+  },
+  {
+    "id": 2,
+    "platform": "twitter",
+    "text": "@TechCorp your delivery service is terrible. Ordered 2 weeks ago, still waiting. Getting frustrated!",
+    "author": "@disappointed_user",
+    "timestamp": "2025-10-21T09:15:00Z",
+    "engagement": {
+      "likes": 12,
+      "retweets": 5
+    }
+  },
+  {
+    "id": 3,
+    "platform": "blog",
+    "text": "TechCorp's new product launch shows promise. The features are innovative but pricing could be more competitive.",
+    "author": "TechReview Blog",
+    "timestamp": "2025-10-21T07:00:00Z",
+    "engagement": {
+      "views": 1200,
+      "comments": 34
+    }
+  },
+  {
+    "id": 4,
+    "platform": "twitter",
+    "text": "Impressed with @TechCorp customer service! They resolved my issue within hours. This is how you do it right! 👏",
+    "author": "@happy_customer",
+    "timestamp": "2025-10-21T10:00:00Z",
+    "engagement": {
+      "likes": 156,
+      "retweets": 23
+    }
+  },
+  {
+    "id": 5,
+    "platform": "news",
+    "text": "TechCorp announces Q3 results exceeding expectations. Market analysts remain cautiously optimistic about growth trajectory.",
+    "author": "Business Daily",
+    "timestamp": "2025-10-21T06:00:00Z",
+    "engagement": {
+      "shares": 789
+    }
+  },
+  {
+    "id": 6,
+    "platform": "twitter",
+    "text": "Still experiencing bugs with the latest update from @TechCorp. Anyone else having issues? #TechCorpProblems",
+    "author": "@tech_user_99",
+    "timestamp": "2025-10-21T11:30:00Z",
+    "engagement": {
+      "likes": 67,
+      "retweets": 34
+    }
+  },
+  {
+    "id": 7,
+    "platform": "twitter",
+    "text": "The innovation @TechCorp brings to the market is unmatched. Excited for what's coming next!",
+    "author": "@industry_watcher",
+    "timestamp": "2025-10-21T09:45:00Z",
+    "engagement": {
+      "likes": 432,
+      "retweets": 145
+    }
+  },
+  {
+    "id": 8,
+    "platform": "blog",
+    "text": "Mixed feelings about TechCorp's direction. Good products but customer support needs improvement based on recent feedback.",
+    "author": "Digital Insights",
+    "timestamp": "2025-10-21T08:00:00Z",
+    "engagement": {
+      "views": 890,
+      "comments": 23
+    }
+  }
+]

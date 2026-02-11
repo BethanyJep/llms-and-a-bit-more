@@ -1,0 +1,42 @@
+{
+  "negative_threshold": 30,
+  "escalation_severity": {
+    "low": 0,
+    "medium": 30,
+    "high": 50
+  },
+  "time_ranges": {
+    "24h": "Last 24 hours",
+    "7d": "Last 7 days",
+    "30d": "Last 30 days"
+  },
+  "supported_platforms": [
+    "twitter",
+    "blog",
+    "news",
+    "reddit",
+    "linkedin"
+  ],
+  "topic_keywords": {
+    "product launch": ["product", "launch", "new"],
+    "customer service": ["customer service", "support", "resolved"],
+    "delivery issues": ["delivery", "waiting", "delay", "shipping"],
+    "technical issues": ["bugs", "issues", "update", "problems"],
+    "innovation": ["innovation", "innovative", "features"],
+    "pricing": ["price", "pricing", "cost", "expensive", "cheap"]
+  },
+  "response_templates": {
+    "delivery": {
+      "professional": "We sincerely apologize for the delivery delays. We're actively working with our logistics partners to resolve this. Affected customers will receive priority shipping and a goodwill gesture. We appreciate your patience.",
+      "empathetic": "We understand how frustrating delivery delays can be, and we're truly sorry. Your satisfaction matters to us, and we're personally overseeing resolution of these issues. Please reach out to us directly so we can make this right."
+    },
+    "technical": {
+      "professional": "Thank you for reporting this issue. Our engineering team has identified the cause and is deploying a fix. We expect resolution within 24 hours. We appreciate your patience and feedback.",
+      "empathetic": "We hear you, and we're sorry for the inconvenience. Our team is working around the clock to fix this. We'll keep you updated every step of the way."
+    },
+    "general": {
+      "professional": "We appreciate your feedback and take these concerns seriously. Our team is investigating and will provide an update within 24 hours.",
+      "empathetic": "Thank you for bringing this to our attention. We value your input and are committed to making this right. We'll be in touch soon with next steps."
+    }
+  }
+}

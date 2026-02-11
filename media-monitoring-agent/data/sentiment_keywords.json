@@ -1,0 +1,49 @@
+{
+  "positive_keywords": [
+    "love",
+    "loving",
+    "best",
+    "impressed",
+    "great",
+    "excellent",
+    "amazing",
+    "resolved",
+    "right",
+    "innovation",
+    "innovative",
+    "excited",
+    "unmatched",
+    "fantastic",
+    "wonderful",
+    "outstanding",
+    "perfect",
+    "awesome"
+  ],
+  "negative_keywords": [
+    "terrible",
+    "waiting",
+    "frustrated",
+    "disappointed",
+    "bugs",
+    "issues",
+    "problems",
+    "bad",
+    "worst",
+    "delay",
+    "poor",
+    "awful",
+    "horrible",
+    "useless",
+    "broken"
+  ],
+  "neutral_keywords": [
+    "shows promise",
+    "could be",
+    "remain cautiously",
+    "mixed feelings",
+    "needs improvement",
+    "average",
+    "okay",
+    "moderate"
+  ]
+}
